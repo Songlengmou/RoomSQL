@@ -89,12 +89,10 @@ public class PhoneActivity extends AppCompatActivity implements View.OnClickList
         final EditText etNumber = customView.findViewById(R.id.etAge);
         etName.setText(phoneBean.name);
         etNumber.setText(phoneBean.number);
-
         final AlertDialog.Builder builder = new AlertDialog.Builder(PhoneActivity.this);
         AlertDialog dialog = builder.create();
-        dialog.setTitle("Update Student");
+        dialog.setTitle("Update Phone");
         dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etNumber.getText().toString())) {
