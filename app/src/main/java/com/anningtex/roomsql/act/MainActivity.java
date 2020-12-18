@@ -1,6 +1,7 @@
-package com.anningtex.roomsql;
+package com.anningtex.roomsql.act;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -14,8 +15,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.anningtex.roomsql.database.MyDatabase;
-import com.anningtex.roomsql.database.Student;
+import com.anningtex.roomsql.R;
+import com.anningtex.roomsql.adapter.StudentAdapter;
+import com.anningtex.roomsql.db.MyDataBase;
+import com.anningtex.roomsql.entriy.StudentBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +32,11 @@ import java.util.List;
  * 2. Dao：（Data Access Objects）数据访问对象，顾名思义，我们可以通过它来访问数据。
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private MyDatabase myDatabase;
-    private List<Student> studentList;
+    private MyDataBase myDatabase;
+    private List<StudentBean> studentBeanList;
     private StudentAdapter studentAdapter;
 
-    private Button mBtnInsertStudent;
-    private Button mBtnQueryStudentAll;
-    private Button mBtnQueryStudentId;
+    private Button mBtnInsertStudent, mBtnQueryStudentAll, mBtnQueryStudentId, mBtnNext;
     private EditText mEtInputId;
     private ListView mLvStudent;
 
@@ -55,19 +56,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mBtnQueryStudentId.setOnClickListener(this);
         mEtInputId = findViewById(R.id.etInputId);
         mLvStudent = findViewById(R.id.lvStudent);
+        mBtnNext = findViewById(R.id.btn_next);
+        mBtnNext.setOnClickListener(this);
 
-        studentList = new ArrayList<>();
-        studentAdapter = new StudentAdapter(MainActivity.this, studentList);
+        studentBeanList = new ArrayList<>();
+        studentAdapter = new StudentAdapter(MainActivity.this, studentBeanList);
         mLvStudent.setAdapter(studentAdapter);
         mLvStudent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-                updateOrDeleteDialog(studentList.get(position));
+                updateOrDeleteDialog(studentBeanList.get(position));
                 return false;
             }
         });
 
-        myDatabase = MyDatabase.getInstance(this);
+        myDatabase = MyDataBase.getInstance(this);
         // 不能直接在UI线程中执行这些操作，需要放在工作线程中进行，所以使用AsyncTask来进行查询操作。
         new QueryStudentTask().execute();
     }
@@ -89,6 +92,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     new QueryStudentIdTask(Integer.valueOf(studentID)).execute();
                     mEtInputId.setText("");
                 }
+                break;
+            case R.id.btn_next:
+                startActivity(new Intent(MainActivity.this, PhoneActivity.class));
                 break;
             default:
                 break;
@@ -124,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
     }
 
-    private void updateOrDeleteDialog(final Student student) {
+    private void updateOrDeleteDialog(final StudentBean studentBean) {
         final String[] options = new String[]{"修改", "删除"};
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("Choose")
@@ -132,24 +138,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == 0) {
-                            openUpdateStudentDialog(student);
+                            openUpdateStudentDialog(studentBean);
                         } else if (which == 1) {
-                            new DeleteStudentTask(student).execute();
+                            new DeleteStudentTask(studentBean).execute();
                         }
                     }
                 }).show();
     }
 
-    private void openUpdateStudentDialog(final Student student) {
-        if (student == null) {
+    private void openUpdateStudentDialog(final StudentBean studentBean) {
+        if (studentBean == null) {
             return;
         }
 
         View customView = this.getLayoutInflater().inflate(R.layout.dialog_layout_student, null);
         final EditText etName = customView.findViewById(R.id.etName);
         final EditText etAge = customView.findViewById(R.id.etAge);
-        etName.setText(student.name);
-        etAge.setText(student.age);
+        etName.setText(studentBean.name);
+        etAge.setText(studentBean.age);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         AlertDialog dialog = builder.create();
@@ -161,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etAge.getText().toString())) {
                     Toast.makeText(MainActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
                 } else {
-                    new UpdateStudentTask(student.id, etName.getText().toString(), etAge.getText().toString()).execute();
+                    new UpdateStudentTask(studentBean.id, etName.getText().toString(), etAge.getText().toString()).execute();
                 }
             }
         });
@@ -179,8 +185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 增刪改查
      */
     private class InsertStudentTask extends AsyncTask<Void, Void, Void> {
-        String name;
-        String age;
+        String name, age;
 
         public InsertStudentTask(final String name, final String age) {
             this.name = name;
@@ -189,9 +194,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(Void... voids) {
-            myDatabase.studentDao().insertStudent(new Student(name, age));
-            studentList.clear();
-            studentList.addAll(myDatabase.studentDao().getStudentList());
+            myDatabase.studentDao().insertStudent(new StudentBean(name, age));
+            studentBeanList.clear();
+            studentBeanList.addAll(myDatabase.studentDao().getStudentList());
             return null;
         }
 
@@ -203,17 +208,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private class DeleteStudentTask extends AsyncTask<Void, Void, Void> {
-        Student student;
+        StudentBean studentBean;
 
-        public DeleteStudentTask(Student student) {
-            this.student = student;
+        public DeleteStudentTask(StudentBean studentBean) {
+            this.studentBean = studentBean;
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            myDatabase.studentDao().deleteStudent(student);
-            studentList.clear();
-            studentList.addAll(myDatabase.studentDao().getStudentList());
+            myDatabase.studentDao().deleteStudent(studentBean);
+            studentBeanList.clear();
+            studentBeanList.addAll(myDatabase.studentDao().getStudentList());
             return null;
         }
 
@@ -226,8 +231,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private class UpdateStudentTask extends AsyncTask<Void, Void, Void> {
         int id;
-        String name;
-        String age;
+        String name, age;
 
         public UpdateStudentTask(final int id, final String name, final String age) {
             this.id = id;
@@ -237,9 +241,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(Void... voids) {
-            myDatabase.studentDao().updateStudent(new Student(id, name, age));
-            studentList.clear();
-            studentList.addAll(myDatabase.studentDao().getStudentList());
+            myDatabase.studentDao().updateStudent(new StudentBean(id, name, age));
+            studentBeanList.clear();
+            studentBeanList.addAll(myDatabase.studentDao().getStudentList());
             return null;
         }
 
@@ -256,8 +260,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(Void... voids) {
-            studentList.clear();
-            studentList.addAll(myDatabase.studentDao().getStudentList());
+            studentBeanList.clear();
+            studentBeanList.addAll(myDatabase.studentDao().getStudentList());
             return null;
         }
 
@@ -280,8 +284,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(Void... voids) {
-            studentList.clear();
-            studentList.add(myDatabase.studentDao().getStudentById(id));
+            studentBeanList.clear();
+            studentBeanList.add(myDatabase.studentDao().getStudentById(id));
             return null;
         }
 

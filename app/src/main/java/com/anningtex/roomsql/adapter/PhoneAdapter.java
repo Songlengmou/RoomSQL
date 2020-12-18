@@ -1,25 +1,25 @@
-package com.anningtex.roomsql;
+package com.anningtex.roomsql.adapter;
 
 import android.content.Context;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.anningtex.roomsql.database.Student;
+import com.anningtex.roomsql.R;
+import com.anningtex.roomsql.entriy.PhoneBean;
 
 import java.util.List;
 
 /**
  * @author Administrator
  */
-public class StudentAdapter extends BaseAdapter {
-    private List<Student> data;
+public class PhoneAdapter extends BaseAdapter {
+    private List<PhoneBean> data;
     private LayoutInflater layoutInflater;
 
-    public StudentAdapter(Context context, List<Student> data) {
+    public PhoneAdapter(Context context, List<PhoneBean> data) {
         this.data = data;
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -33,7 +33,7 @@ public class StudentAdapter extends BaseAdapter {
     }
 
     @Override
-    public Student getItem(int position) {
+    public PhoneBean getItem(int position) {
         return data.get(position);
     }
 
@@ -50,19 +50,19 @@ public class StudentAdapter extends BaseAdapter {
             viewHolder = new ViewHolder();
             viewHolder.tvId = convertView.findViewById(R.id.tvId);
             viewHolder.tvName = convertView.findViewById(R.id.tvName);
-            viewHolder.tvAge = convertView.findViewById(R.id.tvAge);
+            viewHolder.tvNumber = convertView.findViewById(R.id.tvAge);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        viewHolder.tvId.setText(String.valueOf(data.get(position).id));
+        viewHolder.tvId.setText(String.valueOf(data.get(position).longId));
         viewHolder.tvName.setText(data.get(position).name);
-        viewHolder.tvAge.setText(data.get(position).age);
+        viewHolder.tvNumber.setText(data.get(position).number);
         return convertView;
     }
 
     class ViewHolder {
-        TextView tvId, tvName, tvAge;
+        TextView tvId, tvName, tvNumber;
     }
 }

@@ -1,4 +1,4 @@
-package com.anningtex.roomsql.database;
+package com.anningtex.roomsql.entriy;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -15,8 +15,8 @@ import androidx.room.PrimaryKey;
  * @Ignore标签用来告诉系统忽略该字段或者方法。
  */
 
-@Entity(tableName = "student")
-public class Student {
+@Entity(tableName = "Student")
+public class StudentBean {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id", typeAffinity = ColumnInfo.INTEGER)
     public int id;
@@ -27,7 +27,19 @@ public class Student {
     @ColumnInfo(name = "age", typeAffinity = ColumnInfo.TEXT)
     public String age;
 
-    public Student(int id, String name, String age) {
+    /**
+     * 新增键值
+     */
+    @ColumnInfo(name = "OLID", typeAffinity = ColumnInfo.INTEGER)
+    private int olid;
+
+    @ColumnInfo(name = "TEST_NAME", typeAffinity = ColumnInfo.TEXT)
+    private String testName;
+
+    @ColumnInfo(name = "BHIIID", typeAffinity = ColumnInfo.INTEGER)
+    private int BHIIID;
+
+    public StudentBean(int id, String name, String age) {
         this.id = id;
         this.name = name;
         this.age = age;
@@ -38,8 +50,32 @@ public class Student {
      * 同样，@Ignore标签还可用于字段，使用@Ignore标签标记过的字段，Room不会持久化该字段的数据
      */
     @Ignore
-    public Student(String name, String age) {
+    public StudentBean(String name, String age) {
         this.name = name;
         this.age = age;
+    }
+
+    public int getOlid() {
+        return olid;
+    }
+
+    public void setOlid(int olid) {
+        this.olid = olid;
+    }
+
+    public String getTestName() {
+        return testName;
+    }
+
+    public void setTestName(String testName) {
+        this.testName = testName;
+    }
+
+    public int getBHIIID() {
+        return BHIIID;
+    }
+
+    public void setBHIIID(int BHIIID) {
+        this.BHIIID = BHIIID;
     }
 }
