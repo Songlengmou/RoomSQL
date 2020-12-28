@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -58,16 +57,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mLvStudent = findViewById(R.id.lvStudent);
         mBtnNext = findViewById(R.id.btn_next);
         mBtnNext.setOnClickListener(this);
+        findViewById(R.id.btn_launch).setOnClickListener(this);
 
         studentBeanList = new ArrayList<>();
         studentAdapter = new StudentAdapter(MainActivity.this, studentBeanList);
         mLvStudent.setAdapter(studentAdapter);
-        mLvStudent.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-                updateOrDeleteDialog(studentBeanList.get(position));
-                return false;
-            }
+        mLvStudent.setOnItemLongClickListener((adapterView, view, position, id) -> {
+            updateOrDeleteDialog(studentBeanList.get(position));
+            return false;
         });
 
         myDatabase = MyDataBase.getInstance(this);
@@ -96,6 +93,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_next:
                 startActivity(new Intent(MainActivity.this, PhoneActivity.class));
                 break;
+            case R.id.btn_launch:
+                startActivity(new Intent(MainActivity.this, OrderSpecActivity.class));
+                break;
             default:
                 break;
         }
@@ -108,22 +108,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         AlertDialog dialog = builder.create();
         dialog.setTitle("Add Student");
-        dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etAge.getText().toString())) {
-                    Toast.makeText(MainActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
-                } else {
-                    new InsertStudentTask(etName.getText().toString(), etAge.getText().toString()).execute();
-                }
+        dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog1, which) -> {
+            if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etAge.getText().toString())) {
+                Toast.makeText(MainActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
+            } else {
+                new InsertStudentTask(etName.getText().toString(), etAge.getText().toString()).execute();
             }
         });
-        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", (dialog12, which) -> dialog12.dismiss());
         dialog.setView(customView);
         dialog.show();
     }
@@ -132,14 +124,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final String[] options = new String[]{"修改", "删除"};
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("Choose")
-                .setItems(options, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            openUpdateStudentDialog(studentBean);
-                        } else if (which == 1) {
-                            new DeleteStudentTask(studentBean).execute();
-                        }
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        openUpdateStudentDialog(studentBean);
+                    } else if (which == 1) {
+                        new DeleteStudentTask(studentBean).execute();
                     }
                 }).show();
     }
@@ -158,23 +147,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         AlertDialog dialog = builder.create();
         dialog.setTitle("Update Student");
-        dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etAge.getText().toString())) {
-                    Toast.makeText(MainActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
-                } else {
-                    new UpdateStudentTask(studentBean.id, etName.getText().toString(), etAge.getText().toString()).execute();
-                }
+        dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog1, which) -> {
+            if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etAge.getText().toString())) {
+                Toast.makeText(MainActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
+            } else {
+                new UpdateStudentTask(studentBean.id, etName.getText().toString(), etAge.getText().toString()).execute();
             }
         });
-        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", (dialog12, which) -> dialog12.dismiss());
         dialog.setView(customView);
         dialog.show();
     }

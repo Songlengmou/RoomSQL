@@ -68,14 +68,11 @@ public class PhoneActivity extends AppCompatActivity implements View.OnClickList
         final String[] options = new String[]{"修改", "删除"};
         new AlertDialog.Builder(PhoneActivity.this)
                 .setTitle("Choose")
-                .setItems(options, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            openUpdateStudentDialog(phoneBean);
-                        } else if (which == 1) {
-                            new DeleteStudentTask(phoneBean).execute();
-                        }
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        openUpdateStudentDialog(phoneBean);
+                    } else if (which == 1) {
+                        new DeleteStudentTask(phoneBean).execute();
                     }
                 }).show();
     }
@@ -92,22 +89,14 @@ public class PhoneActivity extends AppCompatActivity implements View.OnClickList
         final AlertDialog.Builder builder = new AlertDialog.Builder(PhoneActivity.this);
         AlertDialog dialog = builder.create();
         dialog.setTitle("Update Phone");
-        dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etNumber.getText().toString())) {
-                    Toast.makeText(PhoneActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
-                } else {
-                    new UpdatePhoneTask(phoneBean.longId, etName.getText().toString().trim(), etNumber.getText().toString().trim()).execute();
-                }
+        dialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog1, which) -> {
+            if (TextUtils.isEmpty(etName.getText().toString()) || TextUtils.isEmpty(etNumber.getText().toString())) {
+                Toast.makeText(PhoneActivity.this, "输入不能为空", Toast.LENGTH_SHORT).show();
+            } else {
+                new UpdatePhoneTask(phoneBean.longId, etName.getText().toString().trim(), etNumber.getText().toString().trim()).execute();
             }
         });
-        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
+        dialog.setButton(DialogInterface.BUTTON_NEGATIVE, "CANCEL", (dialog12, which) -> dialog12.dismiss());
         dialog.setView(customView);
         dialog.show();
     }

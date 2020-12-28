@@ -8,24 +8,27 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.anningtex.roomsql.dao.OrderSpecDao;
 import com.anningtex.roomsql.dao.PhoneDao;
 import com.anningtex.roomsql.dao.StudentDao;
+import com.anningtex.roomsql.entriy.OrderSpecBean;
 import com.anningtex.roomsql.entriy.PhoneBean;
 import com.anningtex.roomsql.entriy.StudentBean;
 
 /**
  * @Author Song
  */
-@Database(entities = {StudentBean.class, PhoneBean.class}, version = 3, exportSchema = false)
+@Database(entities = {StudentBean.class, PhoneBean.class, OrderSpecBean.class}, version = 4, exportSchema = false)
 public abstract class MyDataBase extends RoomDatabase {
     private static final String DATABASE_NAME = "Student.db";
-
     private static MyDataBase databaseInstance;
 
     public static synchronized MyDataBase getInstance(Context context) {
         if (databaseInstance == null) {
             databaseInstance = Room
                     .databaseBuilder(context.getApplicationContext(), MyDataBase.class, DATABASE_NAME)
+                    .fallbackToDestructiveMigration()
+                    .allowMainThreadQueries()
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build();
         }
@@ -37,7 +40,7 @@ public abstract class MyDataBase extends RoomDatabase {
     public abstract PhoneDao phoneDao();
 
     /**
-     * 升级数据库
+     * 1.升级数据库
      * 增加两个键值
      */
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
@@ -49,7 +52,9 @@ public abstract class MyDataBase extends RoomDatabase {
                     + " ADD COLUMN TEST_NAME TEXT");
         }
     };
-
+    /**
+     * 2.原表中增加一个键值，并且再次创建新表Phone
+     */
     static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
@@ -61,4 +66,9 @@ public abstract class MyDataBase extends RoomDatabase {
                     "NAME TEXT, NUMBER TEXT)");
         }
     };
+
+    /**
+     * 3.不需要写上方的这些Migration，直接创建一个新表,升级数据库版本进行调用
+     */
+    public abstract OrderSpecDao getOrderSpecDao();
 }
