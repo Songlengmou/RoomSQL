@@ -29,4 +29,16 @@ public interface PhoneDao {
 
     @Update
     void updatePhoneData(PhoneBean phoneBean);
+
+    /**
+     * 模糊查询
+     */
+    @Query("SELECT * FROM PHONE WHERE NAME like '%' || :name || '%' ")
+    List<PhoneBean> getPhoneBeanByName(String name);
+
+    /**
+     * 总数量
+     */
+    @Query("SELECT count(*) FROM Phone")
+    Integer queryPhoneBeanAllDataNum();
 }

@@ -1,22 +1,31 @@
 package com.anningtex.roomsql.act;
 
+import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.DialogInterface;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Toast;
-
 import com.anningtex.roomsql.R;
 import com.anningtex.roomsql.adapter.PhoneAdapter;
+import com.anningtex.roomsql.adapter.PopPhoneAdapter;
 import com.anningtex.roomsql.db.MyDataBase;
 import com.anningtex.roomsql.entriy.PhoneBean;
+import com.anningtex.roomsql.pop.PopupWindowUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +35,12 @@ import java.util.List;
  */
 public class PhoneActivity extends AppCompatActivity implements View.OnClickListener {
     private EditText mNameEdit, mPhoneEdit, etNameQuery, etNumberQuery;
+    private TextView mTvTotal;
     private ListView listView;
     private PhoneAdapter phoneAdapter;
     private List<PhoneBean> phoneBeanList;
-
+    private PopupWindowUtils popupWindow;
+    private PopPhoneAdapter popPhoneAdapter;
     private MyDataBase myDatabase;
 
     @Override
@@ -37,11 +48,13 @@ public class PhoneActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_phone);
         initView();
+        addEtNameViewClick();
     }
 
     private void initView() {
         mNameEdit = findViewById(R.id.insert_name_edit);
         mPhoneEdit = findViewById(R.id.insert_phone_edit);
+        mTvTotal = findViewById(R.id.tv_total);
         etNameQuery = findViewById(R.id.et_name_query);
         etNumberQuery = findViewById(R.id.et_number_query);
         listView = findViewById(R.id.data_list_view);
@@ -52,16 +65,63 @@ public class PhoneActivity extends AppCompatActivity implements View.OnClickList
         phoneBeanList = new ArrayList<>();
         phoneAdapter = new PhoneAdapter(PhoneActivity.this, phoneBeanList);
         listView.setAdapter(phoneAdapter);
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                updateOrDeleteDialog(phoneBeanList.get(i));
-                return false;
-            }
+        listView.setOnItemLongClickListener((adapterView, view, i, l) -> {
+            updateOrDeleteDialog(phoneBeanList.get(i));
+            return false;
         });
 
         myDatabase = MyDataBase.getInstance(this);
+        Integer total = myDatabase.phoneDao().queryPhoneBeanAllDataNum();
+        mTvTotal.setText("提示：点击条目进行修改和删除操作( total: " + total + " )");
         new QueryPhoneTask().execute();
+    }
+
+    private void addEtNameViewClick() {
+        popPhoneAdapter = new PopPhoneAdapter(PhoneActivity.this);
+        popupWindow = new PopupWindowUtils(this);
+        mNameEdit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                List<PhoneBean> phoneBeanList = myDatabase.phoneDao().getPhoneBeanByName(s.toString());
+                Log.e("666", "queryName" + phoneBeanList.size());
+                popPhoneAdapter.setList(phoneBeanList);
+                showPop();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+    }
+
+    private void showPop() {
+        View popView = LayoutInflater.from(this).inflate(R.layout.popup_window_list, null, false);
+        ListView popList = popView.findViewById(R.id.pop_list);
+        popupWindow.setContentView(popView);
+        popupWindow.setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+        popupWindow.setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        popupWindow.setFocusable(false);
+        popupWindow.setOutsideTouchable(true);
+        popupWindow.setTouchInterceptor((v, event) -> {
+            // 这里拦截不到返回键
+            return false;
+        });
+        popList.setDivider(new ColorDrawable(Color.WHITE));
+        popList.setDividerHeight(1);
+        popList.setAdapter(popPhoneAdapter);
+        popPhoneAdapter.notifyDataSetChanged();
+        popList.setOnItemClickListener((parent, view, position, id) -> {
+            mNameEdit.setText(popPhoneAdapter.getList().get(position).getName());
+            mNameEdit.setSelection(mNameEdit.length());
+            popupWindow.dismiss();
+        });
+        popupWindow.showAsDropDown(mNameEdit);
     }
 
     private void updateOrDeleteDialog(final PhoneBean phoneBean) {
