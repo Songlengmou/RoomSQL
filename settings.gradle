@@ -1,2 +1,3 @@
 rootProject.name='RoomSQL'
 include ':app'
+include ':parentchildroomtest'
